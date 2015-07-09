@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <memory>
 #include <cassert>
+#include <cstdlib>
 
 namespace dropbox {
 namespace oxygen {
@@ -238,7 +239,9 @@ nn<const T*> nn_addr(const T & object) {
 
 // NN_CHECK_ASSERT triggers an assertion if expression is null.
 #define NN_CHECK_ASSERT(_e) (([&] (auto p) { \
+        /* note: assert() alone is not sufficient here, because it might be compiled out. */ \
         assert(p && #_e " must not be null"); \
+        if (!p) std::abort(); \
         return nn<typename std::remove_reference<decltype(p)>::type>( \
             i_promise_i_checked_for_null, std::move(p)); \
     })(_e))
