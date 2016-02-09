@@ -18,6 +18,7 @@
 
 #include <type_traits>
 #include <memory>
+#include <functional>
 #include <cassert>
 #include <cstdlib>
 
@@ -34,6 +35,12 @@ namespace nn_detail {
 template <typename T> struct element_type { using type = typename T::element_type; };
 template <typename Pointee> struct element_type<Pointee *> { using type = Pointee; };
 }
+
+template <typename PtrType> class nn;
+
+// Trait to check whether a given type is a non-nullable pointer
+template <typename T> struct is_nn : public std::false_type {};
+template <typename PtrType> struct is_nn<nn<PtrType>> : public std::true_type {};
 
 /* nn<PtrType>
  *
@@ -63,6 +70,8 @@ template <typename Pointee> struct element_type<Pointee *> { using type = Pointe
 template <typename PtrType>
 class nn {
 public:
+    static_assert(!is_nn<PtrType>::value, "nn<nn<T>> is disallowed");
+
     using element_type = typename nn_detail::element_type<PtrType>::type;
 
     // Pass through calls to operator* and operator-> transparently
@@ -227,7 +236,45 @@ nn<const T*> nn_addr(const T & object) {
     return nn<const T*>(i_promise_i_checked_for_null, &object);
 }
 
+/* Non-nullable equivalents of shared_ptr's specialized casting functions.
+ * These convert through a shared_ptr since nn<shared_ptr<T>> lacks the ref-count-sharing cast
+ * constructor, but thanks to moves there shouldn't be any significant extra cost. */
+template <typename T, typename U>
+nn_shared_ptr<T> nn_static_pointer_cast(const nn_shared_ptr<U> & org_ptr) {
+    auto raw_ptr = static_cast<typename nn_shared_ptr<T>::element_type *>(org_ptr.get());
+    std::shared_ptr<T> nullable_ptr(org_ptr.as_nullable(), raw_ptr);
+    return nn_shared_ptr<T>(i_promise_i_checked_for_null, std::move(nullable_ptr));
+}
+
+template <typename T, typename U>
+std::shared_ptr<T> nn_dynamic_pointer_cast(const nn_shared_ptr<U> & org_ptr) {
+    auto raw_ptr = dynamic_cast<typename std::shared_ptr<T>::element_type *>(org_ptr.get());
+    if (!raw_ptr) {
+        return nullptr;
+    } else {
+        return std::shared_ptr<T>(org_ptr.as_nullable(), raw_ptr);
+    }
+}
+
+template <typename T, typename U>
+nn_shared_ptr<T> nn_const_pointer_cast(const nn_shared_ptr<U> & org_ptr) {
+    auto raw_ptr = const_cast<typename nn_shared_ptr<T>::element_type *>(org_ptr.get());
+    std::shared_ptr<T> nullable_ptr(org_ptr.as_nullable(), raw_ptr);
+    return nn_shared_ptr<T>(i_promise_i_checked_for_null, std::move(nullable_ptr));
+}
+
 } } /* end namespace dropbox::oxygen */
+
+namespace std {
+    template <typename T>
+    struct hash<::dropbox::oxygen::nn<T>> {
+        using argument_type = ::dropbox::oxygen::nn<T>;
+        using result_type = size_t;
+        result_type operator()(const argument_type & obj) const {
+            return std::hash<T>{}(obj.as_nullable());
+        }
+  };
+}
 
 /* These have to be macros because our internal versions invoke other macros that use
  * __FILE__ and __LINE__, which we want to correctly point to the call site. We're looking
