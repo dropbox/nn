@@ -17,6 +17,13 @@
 #include "nn.hpp"
 #include <unordered_set>
 
+// Check usability of class and macros without "using namespace" first
+// The remaining code below can be more terse.
+static void namespace_test() {
+    dropbox::oxygen::nn<int*> t0 = NN_CHECK_ASSERT(new int(111));
+    dropbox::oxygen::nn<int*> t1 = NN_CHECK_THROW(new int(222));
+}
+
 using namespace dropbox::oxygen;
 using std::shared_ptr;
 using std::unique_ptr;
@@ -177,6 +184,9 @@ int main() {
     const int i2 = 42;
     //take_nn_raw_ptr(nn_addr(i2));
     take_nn_const_raw_ptr(nn_addr(i2));
+
+    // Ensure namespace_test code is run, and not unused.
+    namespace_test();
 
     return 0;
 }
