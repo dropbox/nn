@@ -140,6 +140,15 @@ public:
     // "base_ptr = derived_ptr;" will run the type-converting constructor followed by the
     // implicit move assignment operator.
 
+    // Two-argument constructor, designed for use with the shared_ptr aliasing constructor.
+    // This will not be instantiated if PtrType doesn't have a suitable constructor.
+    template <typename OtherType,
+              typename std::enable_if<
+                    std::is_constructible<PtrType, OtherType, element_type *>::value
+                , int>::type = 0>
+    nn(const nn<OtherType> & ownership_ptr, nn<element_type *> target_ptr)
+        : ptr(ownership_ptr.operator const OtherType & (), target_ptr) {}
+
     // Comparisons. Other comparisons are implemented in terms of these.
     template <typename L, typename R>
     friend bool operator==(const nn<L> &, const R &);
