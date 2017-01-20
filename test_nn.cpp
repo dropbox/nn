@@ -22,6 +22,7 @@
 static void namespace_test() {
     dropbox::oxygen::nn<int*> t0 = NN_CHECK_ASSERT(new int(111));
     dropbox::oxygen::nn<int*> t1 = NN_CHECK_THROW(new int(222));
+    (void)t0; (void)t1;
 }
 
 using namespace dropbox::oxygen;

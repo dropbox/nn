@@ -231,7 +231,7 @@ public:
         return nn_shared_ptr<T>(i_promise_i_checked_for_null, this->shared_from_this());
     }
     nn_shared_ptr<const T> nn_shared_from_this() const {
-        return nn_shared_ptr<T>(i_promise_i_checked_for_null, this->shared_from_this());
+        return nn_shared_ptr<const T>(i_promise_i_checked_for_null, this->shared_from_this());
     }
 };
 
