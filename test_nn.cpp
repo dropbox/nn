@@ -188,5 +188,9 @@ int main() {
     // Ensure namespace_test code is run, and not unused.
     namespace_test();
 
+    // Check aliasing constructor
+    auto set_ptr = nn_make_shared<unordered_set<int>>(unordered_set<int>{42});
+    nn_shared_ptr<const int> set_element_ptr(set_ptr, nn_addr(*set_ptr->begin()));
+
     return 0;
 }
