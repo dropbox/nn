@@ -293,8 +293,10 @@ namespace std {
  */
 #include <stdexcept>
 
-// NN_CHECK_ASSERT triggers an assertion if expression is null.
-#define NN_CHECK_ASSERT(_e) (([&] (auto p) { \
+// NN_CHECK_ASSERT takes a pointer of type PT (e.g. raw pointer, std::shared_ptr or std::unique_ptr)
+// and returns a non-nullable pointer of type nn<PT>.
+// Triggers an assertion if expression evaluates to null.
+#define NN_CHECK_ASSERT(_e) (([&] (typename std::remove_reference<decltype(_e)>::type p) { \
         /* note: assert() alone is not sufficient here, because it might be compiled out. */ \
         assert(p && #_e " must not be null"); \
         if (!p) std::abort(); \
@@ -302,8 +304,10 @@ namespace std {
             dropbox::oxygen::i_promise_i_checked_for_null, std::move(p)); \
     })(_e))
 
-// NN_CHECK_THROW throws if expression is null.
-#define NN_CHECK_THROW(_e) (([&] (auto p) { \
+// NN_CHECK_THROW takes a pointer of type PT (e.g. raw pointer, std::shared_ptr or std::unique_ptr)
+// and returns a non-nullable pointer of type nn<PT>.
+// Throws if expression evaluates to null.
+#define NN_CHECK_THROW(_e) (([&] (typename std::remove_reference<decltype(_e)>::type p) { \
         if (!p) throw std::runtime_error(#_e " must not be null"); \
         return dropbox::oxygen::nn<typename std::remove_reference<decltype(p)>::type>( \
             dropbox::oxygen::i_promise_i_checked_for_null, std::move(p)); \

@@ -35,3 +35,7 @@ nn_shared_ptr<WidgetBase> base_ptr = shared_widget;
 
 Compile-time checking helps find bugs sooner. At Dropbox we use `nn` pervasively in our
 cross-platform C++ codebase.
+
+## Compatibility
+
+nn is C++11 compatible. Tested with GCC 4.8, clang 3.6+ and MSVS 2015.
