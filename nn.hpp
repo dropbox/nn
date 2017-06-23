@@ -294,7 +294,7 @@ namespace std {
 #include <stdexcept>
 
 // NN_CHECK_ASSERT triggers an assertion if expression is null.
-#define NN_CHECK_ASSERT(_e) (([&] (auto p) { \
+#define NN_CHECK_ASSERT(_e) (([&] (typename std::remove_reference<decltype(_e)>::type p) { \
         /* note: assert() alone is not sufficient here, because it might be compiled out. */ \
         assert(p && #_e " must not be null"); \
         if (!p) std::abort(); \
@@ -303,7 +303,7 @@ namespace std {
     })(_e))
 
 // NN_CHECK_THROW throws if expression is null.
-#define NN_CHECK_THROW(_e) (([&] (auto p) { \
+#define NN_CHECK_THROW(_e) (([&] (typename std::remove_reference<decltype(_e)>::type p) { \
         if (!p) throw std::runtime_error(#_e " must not be null"); \
         return dropbox::oxygen::nn<typename std::remove_reference<decltype(p)>::type>( \
             dropbox::oxygen::i_promise_i_checked_for_null, std::move(p)); \
